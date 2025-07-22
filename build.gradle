@@ -4,18 +4,14 @@ plugins {
     id "idea"
 }
 
-tasks.named("wrapper", Wrapper).configure {
-    distributionType = Wrapper.DistributionType.BIN
-}
+tasks.named("wrapper", Wrapper).configure { distributionType = Wrapper.DistributionType.BIN }
 
 version = mod_version
 group = mod_group_id
 base.archivesName = mod_id
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = "UTF-8"
-}
+tasks.withType(JavaCompile).configureEach { options.encoding = "UTF-8" }
 
 neoForge {
     version = neo_version
@@ -23,27 +19,35 @@ neoForge {
         mappingsVersion = parchment_mappings_version
         minecraftVersion = parchment_minecraft_version
     }
-    accessTransformers = files("src/main/resources/META-INF/accesstransformer.cfg")
+    accessTransformers = files "src/main/resources/META-INF/accesstransformer.cfg"
     runs {
-        configureEach {
-            systemProperty "forge.logging.markers", "REGISTRIES"
-            logLevel = org.slf4j.event.Level.DEBUG
-        }
-        client {
-            client()
-            systemProperty "neoforge.enabledGameTestNamespaces", mod_id as String
-        }
+        client { client() }
         server {
             server()
             programArgument "--nogui"
+        }
+        data {
+            data()
+            programArguments.addAll("--mod", mod_id as String,
+                    "--all", "--output", file("src/generated/resources/").getAbsolutePath(),
+                    "--existing", file("src/main/resources/").getAbsolutePath())
+        }
+        configureEach {
+            systemProperty "forge.logging.markers", "REGISTRIES"
             systemProperty "neoforge.enabledGameTestNamespaces", mod_id as String
+            logLevel = org.slf4j.event.Level.DEBUG
         }
     }
+    mods { "$mod_id" { sourceSet(sourceSets.main) } }
 }
 
-configurations {
-    runtimeClasspath.extendsFrom localRuntime
-}
+sourceSets.main.resources.srcDir "src/generated/resources"
+
+configurations { runtimeClasspath.extendsFrom localRuntime }
+
+repositories { maven { url = "https://cursemaven.com/" } }
+
+dependencies { implementation "curse.maven:konkrete-410295:$konkrete_version" }
 
 tasks.withType(ProcessResources).configureEach {
     var replaceProperties = [minecraft_version      : minecraft_version,
@@ -56,11 +60,10 @@ tasks.withType(ProcessResources).configureEach {
                              mod_license            : mod_license,
                              mod_version            : mod_version,
                              mod_authors            : mod_authors,
-                             mod_description        : mod_description]
+                             mod_description        : mod_description,
+                             konkrete_version_range : konkrete_version_range]
     inputs.properties replaceProperties
-    filesMatching(['META-INF/neoforge.mods.toml']) {
-        expand replaceProperties
-    }
+    filesMatching(["META-INF/neoforge.mods.toml"]) { expand replaceProperties }
 }
 
 idea {

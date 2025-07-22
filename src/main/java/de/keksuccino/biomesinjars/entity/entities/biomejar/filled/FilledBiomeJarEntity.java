@@ -1,10 +1,10 @@
 package de.keksuccino.biomesinjars.entity.entities.biomejar.filled;
 
-import de.keksuccino.biomesinjars.entity.Entities;
-import de.keksuccino.biomesinjars.item.Items;
-import de.keksuccino.biomesinjars.item.items.FilledBiomeJarItem;
+import de.keksuccino.biomesinjars.registry.ModEntityTypes;
+import de.keksuccino.biomesinjars.registry.ModItems;
+import de.keksuccino.biomesinjars.item.FilledBiomeJarItem;
 import de.keksuccino.biomesinjars.util.ItemUtils;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -17,19 +17,26 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.AnimationState;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
 
 public class FilledBiomeJarEntity extends Mob {
 
-    private static final EntityDataAccessor<Boolean> DATA_READY_TO_PICKUP = SynchedEntityData.defineId(FilledBiomeJarEntity.class, EntityDataSerializers.BOOLEAN);
-    private static final EntityDataAccessor<Boolean> DATA_SPAWNED_BY_EMPTY_JAR = SynchedEntityData.defineId(FilledBiomeJarEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> DATA_READY_TO_PICKUP = SynchedEntityData.defineId(
+        FilledBiomeJarEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> DATA_SPAWNED_BY_EMPTY_JAR = SynchedEntityData.defineId(
+        FilledBiomeJarEntity.class, EntityDataSerializers.BOOLEAN);
 
     public AnimationState rotationAnimationState = new AnimationState();
     public AnimationState hoverAnimationState = new AnimationState();
@@ -43,10 +50,10 @@ public class FilledBiomeJarEntity extends Mob {
     }
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA_READY_TO_PICKUP, false);
-        this.entityData.define(DATA_SPAWNED_BY_EMPTY_JAR, false);
+    protected void defineSynchedData(SynchedEntityData.@NotNull Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_READY_TO_PICKUP, false);
+        builder.define(DATA_SPAWNED_BY_EMPTY_JAR, false);
     }
 
     public void setReadyToPickup(boolean b) {
@@ -97,7 +104,7 @@ public class FilledBiomeJarEntity extends Mob {
 
     @Override
     public void tick() {
-        if (this.level.isClientSide) {
+        if (level().isClientSide) {
             if (!this.isReadyToPickup() && this.isSpawnedByEmptyJar()) {
                 this.rotationAnimationState.startIfStopped(this.tickCount);
                 if (this.tickCount < 30) {
@@ -118,8 +125,9 @@ public class FilledBiomeJarEntity extends Mob {
         if (this.tickCount >= 130) {
             if (!this.isReadyToPickup()) {
                 this.setReadyToPickup(true);
-                if (!this.level.isClientSide) {
-                    level.playSound(null, this.position().x, this.position().y, this.position().z, SoundEvents.ILLUSIONER_PREPARE_MIRROR, SoundSource.PLAYERS, 1.0F, 1.0F);
+                if (!level().isClientSide) {
+                    level().playSound(null, this.position().x, this.position().y, this.position().z,
+                        SoundEvents.ILLUSIONER_PREPARE_MIRROR, SoundSource.PLAYERS, 1.0F, 1.0F);
                 }
             }
         }
@@ -139,12 +147,13 @@ public class FilledBiomeJarEntity extends Mob {
     }
 
     @Override
-    public void readAdditionalSaveData(CompoundTag compoundTag) {
+    public void readAdditionalSaveData(@NotNull CompoundTag compoundTag) {
         super.readAdditionalSaveData(compoundTag);
         if (compoundTag.contains("biomesinjars_biome")) {
             ResourceKey<Biome> biomeResourceKey = null;
             try {
-                biomeResourceKey = ResourceKey.create(Registry.BIOME_REGISTRY, new ResourceLocation(compoundTag.getString("biomesinjars_biome")));
+                biomeResourceKey = ResourceKey.create(Registries.BIOME,
+                    ResourceLocation.parse(compoundTag.getString("biomesinjars_biome")));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -162,30 +171,32 @@ public class FilledBiomeJarEntity extends Mob {
     //TODO übernehmen
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand interactionHand) {
-        if (!this.level.isClientSide) {
+        if (!level().isClientSide) {
             if (this.isReadyToPickup()) {
                 this.kill();
                 this.remove(RemovalReason.KILLED);
-                level.playSound(null, this.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 1.0F, 1.0F);
+                level().playSound(null, this.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 1.0F, 1.0F);
                 int slot = player.getInventory().getFreeSlot();
                 ItemStack filledJarStack;
                 if (this.biome != null) {
                     filledJarStack = FilledBiomeJarItem.createStack(this.biome);
                 } else {
-                    filledJarStack = new ItemStack(Items.FILLED_BIOME_JAR_ITEM.get());
+                    filledJarStack = new ItemStack(ModItems.FILLED_BIOME_JAR_ITEM.get());
                 }
                 if (slot != -1) {
                     player.getInventory().setItem(slot, filledJarStack);
                 } else {
-                    ItemUtils.dropItemStack(this.level, filledJarStack, this.blockPosition());
+                    ItemUtils.dropItemStack(level(), filledJarStack, this.blockPosition());
                 }
             }
         }
-        return InteractionResult.sidedSuccess(this.level.isClientSide);
+        return InteractionResult.sidedSuccess(level().isClientSide);
     }
 
-    public static FilledBiomeJarEntity spawnAt(ServerLevel serverLevel, Vec3 position, float xRot, ResourceKey<Biome> biome, boolean spawnedByEmptyJarEntity) {
-        FilledBiomeJarEntity entity = Entities.FILLED_BIOME_JAR_ENTITY.get().create(serverLevel);
+    public static FilledBiomeJarEntity spawnAt(ServerLevel serverLevel, Vec3 position, float xRot,
+        ResourceKey<Biome> biome, boolean spawnedByEmptyJarEntity
+    ) {
+        FilledBiomeJarEntity entity = ModEntityTypes.FILLED_BIOME_JAR_ENTITY.get().create(serverLevel);
         if (entity == null) {
             return null;
         }
@@ -195,9 +206,10 @@ public class FilledBiomeJarEntity extends Mob {
         entity.moveTo(position.x, position.y, position.z, xRot, 0.0f);
         entity.yHeadRot = entity.getYRot();
         entity.yBodyRot = entity.getYRot();
-        entity.finalizeSpawn(serverLevel, serverLevel.getCurrentDifficultyAt(entity.blockPosition()), MobSpawnType.SPAWN_EGG, null, null);
+        entity.finalizeSpawn(serverLevel, serverLevel.getCurrentDifficultyAt(entity.blockPosition()),
+            MobSpawnType.SPAWN_EGG, null);
         entity.playAmbientSound();
-        EntityType.updateCustomEntityTag(serverLevel, null, entity, null);
+        EntityType.updateCustomEntityTag(serverLevel, null, entity, CustomData.EMPTY);
         serverLevel.addFreshEntityWithPassengers(entity);
         return entity;
     }
