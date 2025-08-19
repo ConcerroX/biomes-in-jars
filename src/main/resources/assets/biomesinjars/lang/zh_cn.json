@@ -1,0 +1,17 @@
+{
+  "item.biomesinjars.filled_biome_jar.generic": "群系罐子",
+  "item.biomesinjars.filled_biome_jar": "%s罐子",
+  "item.biomesinjars.filled_biome_jar.tooltip.line_1": "§6这个罐子似乎装着",
+  "item.biomesinjars.filled_biome_jar.tooltip.line_2": "§6一些压缩世界碎片。",
+  "item.biomesinjars.filled_biome_jar.tooltip.line_3": "§6它在你的手中振动。",
+  "item.biomesinjars.filled_biome_jar.tooltip.line_4": "",
+  "item.biomesinjars.filled_biome_jar.tooltip.line_5": "§6也许你可以在这把它放出来？",
+  "biome.biomesinjars.dead_land": "死地",
+  "item.biomesinjars.empty_biome_jar": "空群系罐子",
+  "item.biomesinjars.empty_biome_jar.tooltip.line_1": "§6这个罐子周围环绕着",
+  "item.biomesinjars.empty_biome_jar.tooltip.line_2": "§6 一股强烈的气场。看着它会让你",
+  "item.biomesinjars.empty_biome_jar.tooltip.line_3": "§6起鸡皮疙瘩。",
+  "item.biomesinjars.empty_biome_jar.tooltip.line_4": "§6把它放在地面时，",
+  "item.biomesinjars.empty_biome_jar.tooltip.line_5": "§6它会震动。",
+  "biomesinjars.command.biomejar.unable_to_give": "§c无法给予物品！没有空闲栏位！"
+}
