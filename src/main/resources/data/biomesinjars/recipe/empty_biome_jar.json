@@ -20,7 +20,7 @@
         }
     },
     "result": {
-        "item": "biomesinjars:empty_biome_jar",
+        "id": "biomesinjars:empty_biome_jar",
         "count": 1
     },
     "group": "jar"
